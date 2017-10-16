@@ -20,7 +20,7 @@ namespace IdentityServer4.MongoDB.Services
         public CorsPolicyService(IConfigurationDbContext context, ILogger<CorsPolicyService> logger)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
-            
+
             _context = context;
             _logger = logger;
         }
@@ -30,11 +30,14 @@ namespace IdentityServer4.MongoDB.Services
             // If we use SelectMany directly, we got a NotSupportedException inside MongoDB driver.
             // Details: 
             // System.NotSupportedException: Unable to determine the serialization information for the collection 
-            // selector in the tree: aggregate([]).SelectMany(x => x.AllowedCorsOrigins.Select(y => y.Origin))
-            var origins = _context.Clients.Select(x => x.AllowedCorsOrigins.Select(y => y.Origin)).ToList();
+            // selector in the tree: aggregate([]).SelectMany(x => x.AllowedCorsOrigins.Select(y => y.Origin)
+            //var origins = _context.Clients.SelectMany(x => x.AllowedCorsOrigins).Select(y => y.Origin).ToList();
+
+            var origins = _context.Clients.Where(x => x.AllowedCorsOrigins.Any(y => y.Origin == origin)).ToList()
+                .SelectMany(x=>x.AllowedCorsOrigins.Select(y=>y.Origin));
 
             // As a workaround, we use SelectMany in memory.
-            var distinctOrigins = origins.SelectMany(o => o).Where(x => x != null).Distinct();
+            var distinctOrigins = origins.Where(x => x != null).Distinct();
 
             var isAllowed = distinctOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase);
 

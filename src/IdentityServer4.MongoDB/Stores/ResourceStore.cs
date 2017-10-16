@@ -53,8 +53,8 @@ namespace IdentityServer4.MongoDB.Stores
             var names = scopeNames.ToArray();
 
             var apis =
-                from api in _context.ApiResources
-                where api.Scopes.Where(x => names.Contains(x.Name)).Any()
+                from api in _context.ApiResources.ToList()
+                where api.Scopes.Any(x => names.Contains(x.Name))
                 select api;
 
             var results = apis.ToArray();
